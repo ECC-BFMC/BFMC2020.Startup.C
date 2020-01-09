@@ -4,7 +4,7 @@
 
 
 SerialComManager::SerialComManager(BaseResponseHandler& f_responseHandler)
-                                :SerialComManager(460800,"/dev/ttyACM0",f_responseHandler)
+                                :SerialComManager(230400,"/dev/ttyACM0",f_responseHandler)
 {
 }
 
@@ -43,7 +43,6 @@ void SerialComManager::sendMove(float f_vel,float f_angle){
 
 void SerialComManager::sendBrake(float f_angle){
     std::string l_msg=message::brake(f_angle);
-    std::cout<<l_msg<<std::endl;
     m_serialPort.write(l_msg);
 }
 void SerialComManager::sendSpline(std::complex<double> f_A,std::complex<double> f_B,std::complex<double> f_C,std::complex<double> f_D,float f_duration,bool f_isForward){
