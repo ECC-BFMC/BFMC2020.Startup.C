@@ -1,0 +1,58 @@
+FOLDER = C:\SysGCC\Raspberry\bin
+
+
+CC = '$(FOLDER)\arm-linux-gnueabihf-gcc' 
+
+CXX = '$(FOLDER)\arm-linux-gnueabihf-g++' 
+
+INCLUDE	= -I ./
+LDLIBS = -lpthread -lboost_system
+
+DEBUG	= -O3
+CPPFLAGS=  $(DEBUG) '-Wall' $(INCLUDE) '-std=c++11'
+
+
+SRC	= $(wildcard *.cpp)
+OBJ = $(addprefix ./bin/,$(SRC:.cpp=.o))
+
+PROGRAM = ./bin/main
+
+rebuild: clean all
+
+all: folder $(PROGRAM)
+
+folder:
+	@mkdir bin
+
+info:
+	@echo action = $(ACTION)
+	@echo CC = $(CC)
+	@echo CXX = $(CXX)
+	@echo SRC = $(SRC)
+	@echo OBJ = $(OBJ)
+	@echo INCLUDE = $(INCLUDE)
+	@echo CPPFLAGS = $(CPPFLAGS)
+	@echo LDFLAGS = $(LDFLAGS), LDLIBS = $(LDLIBS)
+
+$(PROGRAM): $(OBJ)
+	$(CXX)  -o $(PROGRAM) $(OBJ) $(LDFLAGS) $(LDLIBS)
+
+clean :
+	rmdir /Q /S bin
+# compile : create object files from source files
+# .c is the prerequisite ($<) and .o the target ($@)
+.c.o:
+	$(CC) -c $(CPPFLAGS) $< -o $@
+# .cpp.o:
+	# $(CXX) -c $(CPPFLAGS) $< -o $@
+
+# use this rule if you both have a .cpp and a .h file
+bin/%.o: %.cpp %.h
+	$(CXX) -c $(CPPFLAGS) $< -o $@
+
+# use this rule if you only have a .cpp
+bin/%.o: %.cpp
+	$(CXX) -c $(CPPFLAGS) $< -o $@
+
+.cpp.o:
+	$(CXX) -c $(CPPFLAGS) $< -o $@
