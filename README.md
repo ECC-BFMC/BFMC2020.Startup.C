@@ -1,6 +1,6 @@
-# BFMC Startup C
+# BFMC - Startup C Project
 
-This repository contains a small example application written in C/C++ to communication and control the robot movements. It runs on Raspberry Pi.
+The project contains the firmware for communicating with the Nucleo and control the robot movements (Speed with constant current consumption, speed with constant speed and steering);
 
 ## Requirements
 You need to install **cmake** and **boost** library for compilation.
