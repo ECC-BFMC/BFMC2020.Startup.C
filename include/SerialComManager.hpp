@@ -5,9 +5,8 @@
 #define SERIAL_COM_MANAGER_HPP
 
 #include <boost/asio.hpp>
-#include <boost/asio/serial_port.hpp>
 #include <serialPortHandler.hpp>
-#include <MessageHandler.hpp>
+#include <ResponseHandler.hpp>
 #include <Message.hpp>
 
 class SerialComManager{
@@ -18,14 +17,12 @@ class SerialComManager{
         // void start();
         void closeAll();
 
-        void sendMove(float,float);
+        void sendSpeed(float);
+        void sendSteer(float);
         void sendBrake(float);
-        void sendSpline(std::complex<double>,std::complex<double>,std::complex<double>,std::complex<double>,float,bool);
-        void sendSpline(float A[2],float B[2],float C[2],float D[2],float,bool);
-        void sendPidParam(float,float,float,float);
         void sendPidState(bool);
-        void sendSafetyStopState(bool);
-        void sendDistanceSensorPublisherState(bool);
+        void sendEncoderPublisher(bool);
+        void sendPidParam(float,float,float,float);
         
     private:
         BaseResponseHandler&             m_responseHandler;

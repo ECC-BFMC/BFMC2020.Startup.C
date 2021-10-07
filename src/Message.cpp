@@ -1,10 +1,39 @@
 /**
- * message.cpp - Implementation file
- * message converter functions definitions
- */
+ * Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
 
-#include <stdio.h>
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+*/
+
+
 #include <Message.hpp>
+
+/*
+* This class handles creates the message to send over serial based on the command and on it's value.
+*/
 
 /**
  * @name    getTextForKey
@@ -27,26 +56,48 @@ std::string message::getTextForKey(int enumVal){
 }
 
 /**
- * @name    moving
+ * @name    speed
  * @brief   
  *
- * Construct the string to be sent, associated to an action.
+ * Construct the string to be sent, associated to speed action.
  *
  * @param [in] f_velocity  Velocity.
+ *
+ * @retval Complete string for send command.
+ *
+ * Example Usage:
+ * @code
+ *    speed(1.234);
+ * @endcode
+ */
+std::string message::speed(float f_velocity){
+    std::stringstream strs;
+    char buff[100];
+    snprintf(buff, sizeof(buff),"%.2f;;\r\n",f_velocity);
+    strs<<"#"<<getTextForKey(0)<<":"<<buff;
+    return strs.str();
+}
+
+/**
+ * @name    steering
+ * @brief   
+ *
+ * Construct the string to be sent, associated to steering action.
+ *
  * @param [in] f_angle     Angle.
  *
  * @retval Complete string for send command.
  *
  * Example Usage:
  * @code
- *    moving(1.234,5.678);
+ *    steering(5.678);
  * @endcode
  */
-std::string message::moving(float f_velocity,float f_angle){
+std::string message::steer(float f_angle){
     std::stringstream strs;
     char buff[100];
-    snprintf(buff, sizeof(buff),"%.2f;%.2f;;\r\n",f_velocity,f_angle);
-    strs<<"#"<<getTextForKey(0)<<":"<<buff;
+    snprintf(buff, sizeof(buff),"%.2f;;\r\n",f_angle);
+    strs<<"#"<<getTextForKey(1)<<":"<<buff;
     return strs.str();
 }
 
@@ -69,105 +120,56 @@ std::string message::brake(float f_angle){
     std::stringstream strs;
     char buff[100];
     snprintf(buff, sizeof(buff),"%.2f;;\r\n",f_angle);
-    strs<<"#"<<getTextForKey(1)<<":"<<buff;
-    return strs.str();
-}
-
-/**
- * @name    spline
- * @brief   
- *
- * Construct the string to be sent, associated to the spline,
- *           complex numbers as params.
- *
- * @param [in] A           A - complex number.
- * @param [in] B           B - complex number.
- * @param [in] C           C - complex number.
- * @param [in] D           D - complex number.
- * @param [in] dur_sec     dur_sec.
- * @param [in] isForward   isForward.
- *
- * @retval Complete string for send command.
- *
- * Example Usage:
- * @code
- *    spline(vala,valb,valc,vald,123.456,true);
- * @endcode
- */
-std::string message::spline(
-                std::complex<double> A,
-                std::complex<double> B,
-                std::complex<double> C,
-                std::complex<double> D,
-                float dur_sec,
-                bool isForward){
-    std::stringstream strs;
-    char buff[100];
-    snprintf(
-        buff, 
-        sizeof(buff),
-        "%d;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;;\r\n",
-        isForward,
-        A.real(),
-        A.imag(),
-        B.real(),
-        B.imag(),
-        C.real(),
-        C.imag(),
-        D.real(),
-        D.imag(),
-        dur_sec);
     strs<<"#"<<getTextForKey(2)<<":"<<buff;
     return strs.str();
 }
 
 /**
- * @name    spline
+ * @name    pida
  * @brief   
  *
- * Construct the string to be sent, associated to the spline,
- *           complex numbers as params.
+ * Construct the string to be sent, associated to pid activating.
  *
- * @param [in] A           A - 2 element array.
- * @param [in] B           B - 2 element array.
- * @param [in] C           C - 2 element array.
- * @param [in] D           D - 2 element array.
- * @param [in] dur_sec     dur_sec.
- * @param [in] isForward   isForward.
+ * @param [in] activate     Set PID active or not.
  *
  * @retval Complete string for send command.
  *
  * Example Usage:
  * @code
- *    spline(arraya,arrayb,arrayc,arrayd,789.12,false);
+ *    pida(true);
  * @endcode
  */
-std::string message::spline(
-                float A[2],
-                float B[2],
-                float C[2],
-                float D[2],
-                float dur_sec,
-                bool isForward){
+std::string message::pida(bool activate){
     std::stringstream strs;
     char buff[100];
-    snprintf(
-        buff, 
-        sizeof(buff),
-        "%d;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;;\r\n",
-        isForward,
-        A[0],
-        A[1],
-        B[0],
-        B[1],
-        C[0],
-        C[1],
-        D[0],
-        D[1],
-        dur_sec);
-    strs<<"#"<<getTextForKey(2)<<":"<<buff;
-    return strs.str();   
+    snprintf(buff, sizeof(buff),"%d;;\r\n",activate);
+    strs<<"#"<<getTextForKey(3)<<":"<<buff;
+    return strs.str();
 }
+
+/**
+ * @name    enpb
+ * @brief   
+ *
+ * Construct the string to be sent, associated to encoder publisher activating.
+ *
+ * @param [in] activate     Set ENPB active or not.
+ *
+ * @retval Complete string for send command.
+ *
+ * Example Usage:
+ * @code
+ *    enpb(true);
+ * @endcode
+ */
+std::string message::enpb(bool activate){
+    std::stringstream strs;
+    char buff[100];
+    snprintf(buff, sizeof(buff),"%d;;\r\n",activate);
+    strs<<"#"<<getTextForKey(4)<<":"<<buff;
+    return strs.str();
+}
+
 
 /**
  * @name    pids
@@ -191,80 +193,9 @@ std::string message::pids(float kp,float ki,float kd,float tf){
     std::stringstream strs;
     char buff[100];
     snprintf(buff, sizeof(buff),"%.5f;%.5f;%.5f;%.5f;;\r\n",kp,ki,kd,tf);
-    strs<<"#"<<getTextForKey(3)<<":"<<buff;
-    return strs.str();
-}
-
-/**
- * @name    pida
- * @brief   
- *
- * Construct the string to be sent, associated to pid activating.
- *
- * @param [in] activate     Set PID active or not.
- *
- * @retval Complete string for send command.
- *
- * Example Usage:
- * @code
- *    pida(true);
- * @endcode
- */
-std::string message::pida(bool activate){
-    std::stringstream strs;
-    char buff[100];
-    snprintf(buff, sizeof(buff),"%d;;\r\n",activate);
-    strs<<"#"<<getTextForKey(4)<<":"<<buff;
-    return strs.str();
-}
-
-/**
- * @name    sfbr
- * @brief   
- *
- * Construct the string to be sent, associated to SFBR activating.
- *
- * @param [in] activate     Set SFBR active or not.
- *
- * @retval Complete string for send command.
- *
- * Example Usage:
- * @code
- *    sfbr(true);
- * @endcode
- */
-std::string message::sfbr(bool activate){
-    std::stringstream strs;
-    char buff[100];
-    snprintf(buff, sizeof(buff),"%d;;\r\n",activate);
     strs<<"#"<<getTextForKey(5)<<":"<<buff;
     return strs.str();
 }
-
-/**
- * @name    dspb
- * @brief   
- *
- * Construct the string to be sent, associated to  activate the  distance sensors publicating.
- *
- * @param [in] activate     Set Distance Sensor Pub. active or not.
- *
- * @retval Complete string for send command.
- *
- * Example Usage:
- * @code
- *    dspb(true);
- * @endcode
- */
-std::string message::dspb(bool activate){
-    std::stringstream strs;
-    char buff[100];
-    snprintf(buff, sizeof(buff),"%d;;\r\n",activate);
-    strs<<"#"<<getTextForKey(DSPB)<<":"<<buff;
-    return strs.str();
-}
-
-
 
 message::Actions message::text2Key(const std::string f_keyStr){
     unsigned int length=static_cast<unsigned int>(sizeof(ActionStrings)/sizeof(ActionStrings[0]));

@@ -1,14 +1,38 @@
+/**
+ * Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
 
-//serialPortHandler.cpp - Implementation file
-//class implemetnation for serial sender/receiver
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
 
-#include <iostream>
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/serial_port.hpp>
-#include <boost/thread.hpp>
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+*/
 
 #include "serialPortHandler.hpp"
+
+/*
+* This class handles the sending of the messages to the Embedded via serial and it forwards the received messages to the ResponseHandler
+*/
 
 using namespace std;
 
@@ -56,27 +80,6 @@ serialPortHandler::serialPortHandler(boost::asio::io_service& io_service, unsign
 	std::cout << "flush: " << error.message() << std::endl;
 
 	read_start();
-}
-
-
-/**
- * @name    write
- * @brief   Send data over UART.
- *
- *  pass the write data to the do_write function via the io service in the other thread
- *
- * @param [in] smg  Message to be sent.
- *
- * @retval none.
- *
- * Example Usage:
- * @code
- *    c.write(ch);
- * @endcode
- */	
-void serialPortHandler::write(const char msg) 
-{
-	io_service_.post(boost::bind(&serialPortHandler::do_write, this, msg));
 }
 
 
@@ -140,28 +143,16 @@ void serialPortHandler::read_complete(const boost::system::error_code& error, si
 // callback to handle write call from outside this class
 void serialPortHandler::do_writeString(std::string f_msg){
 	boost::lock_guard<boost::mutex>* guard =new boost::lock_guard<boost::mutex>(m_writeMtx);
-	bool write_in_progress =!write_msgs_.empty();
+	bool write_in_progress = write_msgs_.empty();
 	for ( std::string::iterator it=f_msg.begin(); it!=f_msg.end(); ++it)
 	{
 		write_msgs_.push_back(*it);
 	}
 	delete guard;
-	if(!write_in_progress){
+	if(write_in_progress){
 		write_start();
+		cerr << "finishing closing fock me : " << error.message() << endl; // show the error message
 	}
-}
-
-
-
-// callback to handle write call from outside this class
-void serialPortHandler::do_write(const char msg)
-{ 
-	boost::lock_guard<boost::mutex>* guard =new boost::lock_guard<boost::mutex>(m_writeMtx);
-	bool write_in_progress = !write_msgs_.empty(); // is there anything currently being written?
-	write_msgs_.push_back(msg); // store in write buffer
-	delete guard;
-	if (!write_in_progress) // if nothing is currently being written, then start
-		write_start();
 }
 
 // Start an asynchronous write and call write_complete when it completes or fails
@@ -180,8 +171,6 @@ void serialPortHandler::write_complete(const boost::system::error_code& error)
 	if (!error)
 	{ // write completed, so send next write data
 		write_msgs_.pop_front(); // remove the completed data
-		if (!write_msgs_.empty()) // if there is anthing left to be written
-			write_start(); // then start sending the next item in the buffer
 	}
 	else
 		do_close(error);

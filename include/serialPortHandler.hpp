@@ -11,8 +11,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <string>
+#include <iostream>
 
-#include <MessageHandler.hpp>
+#include <ResponseHandler.hpp>
 
 
 using namespace std;
@@ -30,7 +31,6 @@ class serialPortHandler
 public:
 	serialPortHandler(boost::asio::io_service& io_service, unsigned int baud, const string& device,BaseResponseHandler& responseHandler);
 	void write(std::string);
-	void write(const char msg);
 	void close();
 	bool active();
 
@@ -40,7 +40,6 @@ private:
 	
 	void read_start(void);
 	void read_complete(const boost::system::error_code& error, size_t bytes_transferred);
-	void do_write(const char msg);
 	void do_writeString( std::string);
 	void write_start(void);
 	void write_complete(const boost::system::error_code& error);

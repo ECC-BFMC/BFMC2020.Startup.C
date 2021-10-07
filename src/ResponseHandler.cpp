@@ -1,24 +1,44 @@
-//MessageHandler.cpp - Implementation file
-//class implemetnation for response processining
-#include <MessageHandler.hpp>
-
-
 /**
- * @name    deactive
- * @brief   set the m_actice to false value
- *
- * @retval none.
- *
- * Example Usage:
- * @code
- *    deactivate()
- * @endcode
- */	
+ * Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+*/
+
+
+#include <ResponseHandler.hpp>
+
+/*
+* This class handles the receiving of the messages from the Embedded via serial. 
+*/
+
+
 void BaseResponseHandler::deactive(){
     m_active=false;
 }
-
-
 
 ResponseHandler::ResponseHandler()
                                 :m_isResponse(false)
@@ -29,17 +49,12 @@ ResponseHandler::ResponseHandler()
 
 /**
  * @name    operator()
- * @brief   copy the characters from input buffer to the class buffer
+ * @brief   copy the characters from input buffer to the message buffer
  *
  * @param [in]  buffer              pointer to the buffer
  * @param [in]  bytes_transferred   nr. byte transferred 
  *
  * @retval none.
- *
- * Example Usage:
- * @code
- *    
- * @endcode
  */	
 void ResponseHandler::operator()(const char* buffer,const size_t bytes_transferred){
     for (unsigned int i=0; i < bytes_transferred ;++i){
@@ -47,10 +62,11 @@ void ResponseHandler::operator()(const char* buffer,const size_t bytes_transferr
     }
 }
 
+
 /**
  * @name    _run
  * @brief   while the m_actice is true, the _run executing cyclically, 
- *          read a character from the buffer and process it.
+ *          read a character from the message buffer and sends it to the processer.
  *
  * @retval none.
  *
@@ -71,28 +87,9 @@ void ResponseHandler::_run(){
 
 
 /**
- * @name    createCallbackFncPtr
- * @brief   static function
- *          create a callback function object, through which can be called a class member function
- *
- * @retval new object
- *
- * Example Usage:
- * @code
- *     ResponseHandler::CallbackFncPtrType l_callbackFncObj=ResponseHandler::createCallbackFncPtr(&ClassName::FunctionName,&ObjectName);
- *     (*l_callbackFncObj)(response);
- * @endcode
- */	
-// template<class T>
-// ResponseHandler::CallbackFncPtrType ResponseHandler::createCallbackFncPtr(void (T::*f)(std::string),T* obj){
-//         return  new CallbackFncType( std::bind1st(std::mem_fun(f),obj));
-// }
-
-
-/**
  * @name    createCallbackFncPtr 
  * @brief   static function
- *          Create a callback function object, through which can be called a function
+ *          Create a callback function object, through which can be called a function for handling certain message responses.
  *
  * @retval new object
  *
@@ -109,16 +106,14 @@ ResponseHandler::CallbackFncPtrType ResponseHandler::createCallbackFncPtr(void (
 
 /**
  * @name    attach
- * @brief   Attach the callback function  to the response key word. This callback function will be called automatically, when will be received the key word.
- *          More functions can be attach  to the one key word. 
+ * @brief   Attach the callback function  to the response key word. This callback function will be called automatically, when will be received the key word 
+ *          feedback from the Embedded. More functions can be attach  to the one key word. 
  *
  * @retval new object
  *
  * Example Usage:
  * @code
  *     l_responseHandler.attach(message::KEY,l_callbackFncObj)
- *     
- *     
  * @endcode
  */
 void ResponseHandler::attach(message::Actions f_action,CallbackFncPtrType waiter){
@@ -133,10 +128,9 @@ void ResponseHandler::attach(message::Actions f_action,CallbackFncPtrType waiter
 }
 
 
-
 /**
  * @name    detach
- * @brief   After applying detach function, the callback function will not be called
+ * @brief   After applying detach  on a certain function and message. The callback function will not be called anymore after applying this.
  *
  * @retval new object
  *
@@ -162,13 +156,21 @@ void ResponseHandler::detach(message::Actions f_action,CallbackFncPtrType waiter
 }
 
 
-
+/**
+ * @name    processChr
+ * @brief   Each received character is sent to this function. If the char is '@', it signales the begining of the response.
+ *          If the character is new line ('/r'), it signales the end of the response. 
+ *          If there is any other character, it appends it to the valid response attribute. .
+ *
+ * @retval new object
+ *
+ * Example Usage:
+ * @code
+ *      l_responseHandler.attach(message::KEY,l_callbackFncObj)
+ * @endcode
+ */
 void ResponseHandler::processChr(const char f_received_chr){
     if (f_received_chr=='@'){
-        if (!m_valid_response.empty()){
-            checkResponse();
-            m_valid_response.clear();
-        }
         m_isResponse=true;
     }
     else if(f_received_chr=='\r'){
@@ -183,6 +185,9 @@ void ResponseHandler::processChr(const char f_received_chr){
     }                
 }
 
+ /*  
+ * Response example: "@KEY1:RESPONSECONTANT;;\r\n"
+ */
 void ResponseHandler::checkResponse(){
     std::string l_responseFull(m_valid_response.begin(),m_valid_response.end());
     std::string l_keyStr=l_responseFull.substr(1,4);
